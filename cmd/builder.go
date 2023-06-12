@@ -3,50 +3,39 @@ package cmd
 import (
 	"Builder/derive"
 	"Builder/directory"
+	"Builder/logger"
 	"Builder/utils"
 	"Builder/yaml"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
-func Builder() {
+func Builder(log logger.Logger) {
 	os.Setenv("BUILDER_COMMAND", "true")
 	path, _ := os.Getwd()
 
-	//checks if yaml file exists in path
-	if _, err := os.Stat(path + "/" + "builder.yaml"); err == nil {
+	builderPath := filepath.Join(path, "builder.yaml")
+
+	if _, err := os.Stat(builderPath); err == nil {
 		exec.Command("git", "pull").Run()
 
-		//pareses builder.yaml
-		yaml.YamlParser(path + "/" + "builder.yaml")
+		yaml.YamlParser(builderPath)
 
-		//append logs
-		//logger.CreateLogs(os.Getenv("BUILDER_LOGS_DIR"))
 		directory.MakeDirs()
-		// logger.InfoLogger.Println("Directories successfully created.")
+		log.Info("Directories successfully created.")
 
-		// clone repo into hidden
 		utils.CloneRepo()
-		// logger.InfoLogger.Println("Repo cloned successfully.")
+		log.Info("Repo cloned successfully.")
 
-		//creates a new artifact
 		derive.ProjectType()
 
-		//Get build metadata (deprecated, func moved inside compiler)
-		// logger.InfoLogger.Println("Metadata created successfully.")
-
-		//Check for Dockerfile, then build image
 		utils.Docker()
 
-		//makes hidden dir read-only
 		utils.MakeHidden()
-		// logger.InfoLogger.Println("Hidden Dir is now read-only.")
-
-		//creates global logs dir
-		// logger.GlobalLogs()
-		// delete temp dir
+		log.Info("Hidden Dir is now read-only.")
 	} else {
 		utils.Help()
-		//log.Fatal("bulder.yaml file not found. cd into it's location.")
+		log.Fatal("bulder.yaml file not found. cd into it's location.")
 	}
 }

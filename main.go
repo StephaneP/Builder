@@ -11,7 +11,6 @@ import (
 
 func main() {
 	timestamp := time.Now().Format("20060102-150405")
-
 	localLogFile := fmt.Sprintf("local-%s.log", timestamp)
 
 	log, err := logger.NewDefaultLogger(localLogFile, "global.log")
@@ -25,14 +24,14 @@ func main() {
 		utils.Help()
 		builderCommand := os.Args[1]
 		if builderCommand == "init" {
-			cmd.Init()
+			cmd.Init(log)
 		} else if builderCommand == "config" {
-			cmd.Config()
+			cmd.Config(log)
 		} else {
-			cmd.Builder()
+			cmd.Builder(log)
 		}
 	} else {
-		cmd.Builder()
+		cmd.Builder(log)
 	}
 	fmt.Println("Build Complete 🔨")
 }
