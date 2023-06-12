@@ -3,7 +3,6 @@ package cmd
 import (
 	"Builder/derive"
 	"Builder/directory"
-	"Builder/logger"
 	"Builder/utils"
 	"Builder/yaml"
 	"os"
@@ -24,27 +23,27 @@ func Builder() {
 		//append logs
 		//logger.CreateLogs(os.Getenv("BUILDER_LOGS_DIR"))
 		directory.MakeDirs()
-		logger.InfoLogger.Println("Directories successfully created.")
+		// logger.InfoLogger.Println("Directories successfully created.")
 
 		// clone repo into hidden
 		utils.CloneRepo()
-		logger.InfoLogger.Println("Repo cloned successfully.")
+		// logger.InfoLogger.Println("Repo cloned successfully.")
 
 		//creates a new artifact
 		derive.ProjectType()
 
 		//Get build metadata (deprecated, func moved inside compiler)
-		logger.InfoLogger.Println("Metadata created successfully.")
+		// logger.InfoLogger.Println("Metadata created successfully.")
 
 		//Check for Dockerfile, then build image
 		utils.Docker()
 
 		//makes hidden dir read-only
 		utils.MakeHidden()
-		logger.InfoLogger.Println("Hidden Dir is now read-only.")
+		// logger.InfoLogger.Println("Hidden Dir is now read-only.")
 
 		//creates global logs dir
-		logger.GlobalLogs()
+		// logger.GlobalLogs()
 		// delete temp dir
 	} else {
 		utils.Help()

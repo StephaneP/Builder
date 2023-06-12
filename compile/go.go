@@ -5,7 +5,6 @@ package compile
 
 import (
 	"Builder/artifact"
-	"Builder/logger"
 	"Builder/utils"
 	"Builder/yaml"
 	"bytes"
@@ -16,7 +15,7 @@ import (
 	"strings"
 )
 
-//Go creates exe from file passed in as arg
+// Go creates exe from file passed in as arg
 func Go(filePath string) {
 
 	//Set default project type env for builder.yaml creation
@@ -70,13 +69,13 @@ func Go(filePath string) {
 	}
 
 	//run cmd, check for err, log cmd
-	logger.InfoLogger.Println(cmd)
+	// logger.InfoLogger.Println(cmd)
 	err := cmd.Run()
 	if err != nil {
 		var outb, errb bytes.Buffer
 		cmd.Stdout = &outb
 		cmd.Stderr = &errb
-		logger.ErrorLogger.Println("Go project failed to compile.")
+		// logger.ErrorLogger.Println("Go project failed to compile.")
 		fmt.Println("out:", outb.String(), "err:", errb.String())
 		log.Fatal(err)
 	}
@@ -84,7 +83,7 @@ func Go(filePath string) {
 
 	packageGoArtifact(fullPath)
 
-	logger.InfoLogger.Println("Go project compiled successfully.")
+	// logger.InfoLogger.Println("Go project compiled successfully.")
 }
 
 func packageGoArtifact(fullPath string) {

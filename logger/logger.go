@@ -3,54 +3,58 @@ package logger
 import (
 	"log"
 	"os"
-	"strings"
 )
 
-var (
-	WarningLogger *log.Logger
-	InfoLogger    *log.Logger
-	ErrorLogger   *log.Logger
-)
+type Logger interface {
+	Info(message string)
+	Error(message string)
+	Fatal(message string)
+}
 
-func CreateLogs(filePath string) {
-	logsDir := os.Getenv("BUILDER_LOGS_DIR")
+type DefaultLogger struct {
+	localLog  *os.File
+	globalLog *os.File
+}
 
-	//points back to already created log.txt if using 'builder' cmd
-	// if os.Getenv("BUILDER_COMMAND") == "true" {
-	// 	path, _ := os.Getwd()
-	// 	fmt.Println(path)
-
-	// 	var dirPath string
-	// 	if strings.Contains(path, "workspace") && strings.Contains(path, "temp") {
-	// 		dirPath = strings.Replace(path, "/workspace/temp", "", 1)
-	// 		fmt.Println("IN TEMP: ", dirPath)
-
-	// 	} else if strings.Contains(path, "workspace") {
-	// 		dirPath = strings.TrimRight(path, "/workspace")
-	// 		fmt.Println("IN WRKSPC: ", dirPath)
-	// 	}
-
-	// 	_, extName := artifact.ExtExistsFunction(dirPath+"/logs/", ".txt")
-	// 	file, err := os.OpenFile(dirPath+"/logs/"+extName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-
-	// 	InfoLogger = log.New(file, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	// 	WarningLogger = log.New(file, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
-	// 	ErrorLogger = log.New(file, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-
-	// } else {
-	//log file name = parentDir, creates new logs.txt
-	newFileName := filePath[strings.LastIndex(filePath, "/")+1:]
-	file, err := os.OpenFile(logsDir+"/"+newFileName+"_logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+func NewDefaultLogger(localLogFilePath string, globalLogFilePath string) (*DefaultLogger, error) {
+	localLog, err := os.OpenFile(localLogFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	InfoLogger = log.New(file, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	WarningLogger = log.New(file, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
-	ErrorLogger = log.New(file, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-	// }
+	globalLog, err := os.OpenFile(globalLogFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		localLog.Close()
+		return nil, err
+	}
 
+	return &DefaultLogger{
+		localLog:  localLog,
+		globalLog: globalLog,
+	}, nil
+}
+
+func (l *DefaultLogger) Info(message string) {
+	log.New(l.localLog, "[INFO] ", log.LstdFlags).Println(message)
+	log.New(l.globalLog, "[INFO] ", log.LstdFlags).Println(message)
+}
+
+func (l *DefaultLogger) Error(message string) {
+	log.New(l.localLog, "[ERROR] ", log.LstdFlags).Println(message)
+	log.New(l.globalLog, "[ERROR] ", log.LstdFlags).Println(message)
+}
+
+func (l *DefaultLogger) Fatal(message string) {
+	log.New(l.localLog, "[FATAL] ", log.LstdFlags).Fatal(message)
+	log.New(l.globalLog, "[FATAL] ", log.LstdFlags).Fatal(message)
+}
+
+func (l *DefaultLogger) Close() error {
+	localErr := l.localLog.Close()
+	globalErr := l.globalLog.Close()
+
+	if localErr != nil {
+		return localErr
+	}
+	return globalErr
 }
